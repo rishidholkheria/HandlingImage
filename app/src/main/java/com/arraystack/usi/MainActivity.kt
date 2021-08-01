@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
 
     private val handler: Handler = Handler()
 
-
     lateinit var binding: ActivityMainBinding
 
     private val PERMISSION_CODE = 1000
