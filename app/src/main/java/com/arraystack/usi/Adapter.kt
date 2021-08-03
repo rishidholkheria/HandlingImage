@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.arraystack.usi.databinding.ActivityMainBinding
+import com.arraystack.usi.databinding.ListElementBinding
 import com.bumptech.glide.Glide
 
 class Adapter(private val context: Context, val dataModel: ArrayList<DataModel>) :
@@ -15,7 +16,7 @@ class Adapter(private val context: Context, val dataModel: ArrayList<DataModel>)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
-            ActivityMainBinding.inflate(
+            ListElementBinding.inflate(
                 LayoutInflater.from(context),
                 parent,
                 false
@@ -31,15 +32,16 @@ class Adapter(private val context: Context, val dataModel: ArrayList<DataModel>)
         return dataModel.size
     }
 
-    inner class ViewHolder(private val binding: ActivityMainBinding) :
+    inner class ViewHolder(private val binding: ListElementBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         var item: DataModel? = null
-        fun bind( context: Context, bookModel: DataModel) {
-
+        fun bind(context: Context, model: DataModel) {
+            binding.txtTitle.text = model.title
+            binding.txtDesc.text = model.description
+            Glide.with(context)
+                .load(model.imageLink)
+                .into(binding.imgImage);
         }
-
     }
-
-
 }

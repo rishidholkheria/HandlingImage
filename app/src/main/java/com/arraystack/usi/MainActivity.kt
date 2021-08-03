@@ -21,10 +21,13 @@ import android.view.View
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.arraystack.usi.databinding.ActivityMainBinding
 import com.arraystack.usi.databinding.ProgressBinding
 import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
@@ -35,17 +38,11 @@ class MainActivity : AppCompatActivity() {
 
     private var downloader: Downloader? = null
     private val TAG: String = this::class.java.name
-
     private val handler: Handler = Handler()
 
-    lateinit var binding: ActivityMainBinding
-
     private val PERMISSION_CODE = 1000
-
     private val GALLERY_REQUEST = 9
-
     private val CAMERA_REQUEST = 11
-
     private var filePath: Uri? = null
 
     private var storageReference: StorageReference? = null
@@ -54,8 +51,16 @@ class MainActivity : AppCompatActivity() {
     lateinit var builder: AlertDialog.Builder
     lateinit var dialog: Dialog
 
+    lateinit var mDatabase: DatabaseReference
+    var mAdapter: Adapter? = null
+
+
+    lateinit var binding: ActivityMainBinding
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         getDownloader()
@@ -99,6 +104,39 @@ class MainActivity : AppCompatActivity() {
             getDownloader()
             downloader?.resumeDownload()
         }
+
+        binding.listRecycler.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+
+        var myDataListModel: ArrayList<DataModel> = ArrayList()
+        var myAdapter = Adapter(this, myDataListModel)
+        binding.listRecycler.adapter = myAdapter
+
+        mDatabase =
+            FirebaseDatabase.getInstance().getReference(Constants.DB_NAME).child("imageList")
+
+        mDatabase.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                myDataListModel.clear()
+                for (child in dataSnapshot.children) {
+                    child.key?.let { Log.i(TAG, it) }
+                    var myDataListModelInternal = child.getValue(DataModel::class.java)
+                    if (myDataListModelInternal != null) {
+                        myDataListModel.add(
+                            DataModel(
+                                myDataListModelInternal.title,
+                                myDataListModelInternal.description,
+                                myDataListModelInternal.imageLink
+                            )
+                        )
+                    }
+                }
+                myAdapter.notifyDataSetChanged()
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException())
+            }
+        })
 
     }
 
@@ -157,7 +195,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
 
     private fun uploadFile() {

@@ -12,4 +12,8 @@ class DataModel {
         this.description = description
         this.imageLink = imageLink
     }
+    constructor(title: String?, description: String?) {
+        this.title = title
+        this.description = description
+    }
 }
